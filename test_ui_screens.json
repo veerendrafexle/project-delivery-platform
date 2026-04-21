@@ -1,0 +1,16 @@
+[
+  {
+    "screen": "Main Dashboard",
+    "components": [
+      "Table",
+      "Navigation",
+      "Search"
+    ],
+    "actions": [
+      "View",
+      "Create",
+      "Edit"
+    ],
+    "description": "Primary interface for managing requirements"
+  }
+]

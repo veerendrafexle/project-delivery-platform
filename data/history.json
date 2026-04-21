@@ -1,0 +1,28 @@
+{
+  "structured_data": [
+    {
+      "version": 1,
+      "filename": "structured_data_v1.json",
+      "timestamp": "2026-04-21T09:48:48.904360Z",
+      "metadata": {
+        "source": "ai_extraction"
+      }
+    },
+    {
+      "version": 2,
+      "filename": "structured_data_v2.json",
+      "timestamp": "2026-04-21T09:57:05.523560Z",
+      "metadata": {
+        "source": "ai_extraction"
+      }
+    },
+    {
+      "version": 3,
+      "filename": "structured_data_v3.json",
+      "timestamp": "2026-04-21T10:11:59.165777Z",
+      "metadata": {
+        "source": "ai_extraction"
+      }
+    }
+  ]
+}

@@ -1,9 +1,99 @@
 {
-  "links": [
+  "nodes": {
+    "artifact:BRD_3": {
+      "type": "artifact",
+      "key": "BRD_3",
+      "metadata": {}
+    },
+    "pain_point:Data is spread across multiple systems": {
+      "type": "pain_point",
+      "key": "Data is spread across multiple systems",
+      "metadata": {}
+    },
+    "pain_point:Approval cycles are slow and manual": {
+      "type": "pain_point",
+      "key": "Approval cycles are slow and manual",
+      "metadata": {}
+    },
+    "requirement:Centralize customer data into a single view": {
+      "type": "requirement",
+      "key": "Centralize customer data into a single view",
+      "metadata": {}
+    },
+    "requirement:Automate approval routing for new requests": {
+      "type": "requirement",
+      "key": "Automate approval routing for new requests",
+      "metadata": {}
+    },
+    "source:transcript.txt": {
+      "type": "source",
+      "key": "transcript.txt",
+      "metadata": {
+        "content": "Customer said they need a faster onboarding process and fewer manual handoffs between teams.\n"
+      }
+    },
+    "source:sow.txt": {
+      "type": "source",
+      "key": "sow.txt",
+      "metadata": {
+        "content": "The statement of work calls for a discovery phase to identify business goals, pain points, and future state requirements.\n"
+      }
+    },
+    "source:flows.txt": {
+      "type": "source",
+      "key": "flows.txt",
+      "metadata": {
+        "content": "Existing flows are documented as email threads and spreadsheets, making traceability difficult.\n"
+      }
+    },
+    "source:painpoints.txt": {
+      "type": "source",
+      "key": "painpoints.txt",
+      "metadata": {
+        "content": "Current process requires too many manual approvals and lacks a centralized source of truth.\n"
+      }
+    }
+  },
+  "edges": [
     {
-      "source": "inputs/transcript.txt",
-      "target": "outputs/BRD.docx",
-      "type": "extracted_requirement"
+      "from": "source:transcript.txt",
+      "to": "pain_point:Approval cycles are slow and manual",
+      "relation": "contains"
+    },
+    {
+      "from": "pain_point:Data is spread across multiple systems",
+      "to": "requirement:Centralize customer data into a single view",
+      "relation": "informs"
+    },
+    {
+      "from": "pain_point:Approval cycles are slow and manual",
+      "to": "requirement:Centralize customer data into a single view",
+      "relation": "informs"
+    },
+    {
+      "from": "source:flows.txt",
+      "to": "pain_point:Data is spread across multiple systems",
+      "relation": "contains"
+    },
+    {
+      "from": "source:painpoints.txt",
+      "to": "pain_point:Approval cycles are slow and manual",
+      "relation": "contains"
+    },
+    {
+      "from": "pain_point:Approval cycles are slow and manual",
+      "to": "requirement:Automate approval routing for new requests",
+      "relation": "informs"
+    },
+    {
+      "from": "requirement:Centralize customer data into a single view",
+      "to": "artifact:BRD_3",
+      "relation": "documented_in"
+    },
+    {
+      "from": "requirement:Automate approval routing for new requests",
+      "to": "artifact:BRD_3",
+      "relation": "documented_in"
     }
   ]
 }

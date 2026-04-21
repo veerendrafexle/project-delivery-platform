@@ -1,0 +1,18 @@
+{
+  "objects": [
+    "Lead",
+    "Opportunity",
+    "Account"
+  ],
+  "fields": {
+    "customer_name": "Name",
+    "email": "Email",
+    "deal_amount": "Amount",
+    "close_date": "CloseDate",
+    "lead_status": "Status"
+  },
+  "flows": [
+    "Lead Conversion Flow",
+    "Opportunity Management Flow"
+  ]
+}

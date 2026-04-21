@@ -1,29 +1,37 @@
 """Convert raw discovery input into structured JSON."""
+import logging
 from typing import Any, Dict, List, Optional
 
-from app.ai_engine import call_llm
+from app.ai_engine import call_with_retry
 from app.rag import build_rag_prompt
 from config import settings
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+    logger.addHandler(handler)
 
 
 def _validate_structure(data: Any) -> bool:
     """Validate that extracted data matches expected schema."""
     if not isinstance(data, dict):
         return False
-    
+
     required_keys = {"business_goals", "pain_points", "requirements", "current_state", "future_state"}
     if not required_keys.issubset(data.keys()):
         return False
-    
+
     for key in required_keys:
         value = data[key]
         if not isinstance(value, list):
             return False
-        if not all(isinstance(item, str) for item in value):
+        if not value:
             return False
-        if not value:  # empty list
+        if not all(isinstance(item, str) and item.strip() for item in value):
             return False
-    
+
     return True
 
 
@@ -32,7 +40,6 @@ def _sanitize_structure(data: Dict[str, Any]) -> Dict[str, List[str]]:
     sanitized = {}
     for key in ["business_goals", "pain_points", "requirements", "current_state", "future_state"]:
         items = data.get(key, [])
-        # Remove duplicates while preserving order
         seen = set()
         unique = []
         for item in items:
@@ -47,6 +54,7 @@ def _sanitize_structure(data: Dict[str, Any]) -> Dict[str, List[str]]:
 def extract_structure(raw_text: str, context_chunks: Optional[List[str]] = None) -> Dict[str, List[str]]:
     """Use the AI engine to extract structured JSON from raw text with schema validation."""
     if not raw_text or not raw_text.strip():
+        logger.warning("Empty raw text provided to extract_structure")
         return {
             "business_goals": ["Not specified"],
             "pain_points": ["Not specified"],
@@ -71,19 +79,23 @@ Input text:
     if context_chunks:
         prompt = build_rag_prompt(prompt, context_chunks)
 
-    response = call_llm(
-        prompt,
-        model=settings.MODEL,
-        api_key=settings.API_KEY,
-        api_url=settings.API_URL,
-        local_url=settings.LOCAL_LLM_URL,
-    )
+    logger.info("Requesting structured extraction from AI")
+    response = call_with_retry(prompt)
+
+    if response is None:
+        logger.error("Structured extraction failed after retries")
+        return {
+            "business_goals": ["Failed to extract"],
+            "pain_points": ["Failed to extract"],
+            "requirements": ["Failed to extract"],
+            "current_state": ["Failed to extract"],
+            "future_state": ["Failed to extract"],
+        }
 
     if _validate_structure(response):
         return _sanitize_structure(response)
-    print("Failed to validate AI response against schema; using fallback structure.")
-    
-    # Fallback to safe structure
+
+    logger.error("AI response did not match expected structure")
     return {
         "business_goals": ["Failed to extract"],
         "pain_points": ["Failed to extract"],

@@ -1,109 +1,23 @@
-"""AI engine integration for Ollama/OpenRouter."""
+"""AI engine integration for Ollama with retry and JSON safety."""
 import json
+import logging
 import os
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
-from dotenv import load_dotenv
 import requests
-
-load_dotenv()
 
 DEFAULT_LOCAL_URL = "http://localhost:11434/api/generate"
 MAX_RETRIES = 3
 RETRY_DELAY = 1  # seconds
 REQUEST_TIMEOUT = 30  # seconds
-REQUIRED_KEYS = [
-    "business_goals",
-    "pain_points",
-    "requirements",
-    "current_state",
-    "future_state",
-]
 
-
-def _log_error(message: str, error: Optional[Exception] = None) -> None:
-    if error is not None:
-        print(f"[AI ENGINE] {message}: {type(error).__name__} - {error}")
-    else:
-        print(f"[AI ENGINE] {message}")
-
-
-def _development_fallback() -> Dict[str, List[str]]:
-    return {
-        "business_goals": [
-            "Improve customer onboarding",
-            "Reduce manual processing effort",
-        ],
-        "pain_points": [
-            "Data is spread across multiple systems",
-            "Approval cycles are slow and manual",
-        ],
-        "requirements": [
-            "Centralize customer data into a single view",
-            "Automate approval routing for new requests",
-        ],
-        "current_state": [
-            "Multiple legacy applications",
-            "No standardized requirements artifacts",
-        ],
-        "future_state": [
-            "Unified delivery platform",
-            "Automated governance and traceability",
-        ],
-    }
-
-
-def _validate_json_schema(data: Any, required_keys: Optional[List[str]] = None) -> bool:
-    if not isinstance(data, dict):
-        return False
-
-    required_keys = required_keys or REQUIRED_KEYS
-    if set(data.keys()) != set(required_keys):
-        return False
-
-    for key in required_keys:
-        value = data.get(key)
-        if not isinstance(value, list) or not value:
-            return False
-        if not all(isinstance(item, str) and item.strip() for item in value):
-            return False
-
-    return True
-
-
-def _parse_json_response(payload: str, required_keys: Optional[List[str]] = None) -> Dict[str, Any]:
-    parsed = json.loads(payload)
-    if not _validate_json_schema(parsed, required_keys):
-        raise ValueError("JSON response failed schema validation")
-    return parsed
-
-
-def _call_openrouter(prompt: str, model: str, api_key: str, api_url: str) -> str:
-    url = api_url or "https://api.openrouter.ai/v1/chat/completions"
-    headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
-    payload = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.0,
-    }
-    response = requests.post(
-        url, json=payload, headers=headers, timeout=REQUEST_TIMEOUT
-    )
-    response.raise_for_status()
-    data = response.json()
-    return data["choices"][0]["message"]["content"]
-
-
-def _call_local_ollama(prompt: str, model: str, local_url: str) -> str:
-    response = requests.post(
-        local_url,
-        json={"model": model, "prompt": prompt, "stream": False},
-        timeout=REQUEST_TIMEOUT,
-    )
-    response.raise_for_status()
-    data = response.json()
-    return data.get("response", "")
+logger = logging.getLogger("ai_engine")
+logger.setLevel(logging.INFO)
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+    logger.addHandler(handler)
 
 
 def call_llm(
@@ -113,35 +27,65 @@ def call_llm(
     api_url: Optional[str] = None,
     local_url: Optional[str] = None,
     retries: int = MAX_RETRIES,
-    required_keys: Optional[List[str]] = None,
+    required_keys: Optional[Any] = None,
     response_format: str = "schema",
+    **kwargs: Any,
 ) -> Any:
-    """Call a local or remote LLM endpoint and return parsed JSON output."""
+    """Call an LLM endpoint and return raw or parsed output depending on response_format."""
+    local_url = local_url or os.getenv("LOCAL_LLM_URL") or DEFAULT_LOCAL_URL
     api_key = api_key or os.getenv("OPENROUTER_API_KEY")
     api_url = api_url or os.getenv("OPENROUTER_API_URL")
-    local_url = local_url or os.getenv("LOCAL_LLM_URL") or DEFAULT_LOCAL_URL
-    required_keys = required_keys or REQUIRED_KEYS
 
+    if api_key or api_url:
+        return _call_openrouter(prompt, model, api_key or "", api_url or "")
+
+    payload = {"model": model, "prompt": prompt, "stream": False}
+    logger.debug("Calling local Ollama API")
+    response = requests.post(local_url, json=payload, timeout=REQUEST_TIMEOUT)
+    response.raise_for_status()
+
+    data = response.json()
+    if isinstance(data, dict) and "response" in data:
+        raw_response = data["response"]
+    else:
+        raw_response = json.dumps(data)
+
+    if response_format == "json":
+        return json.loads(raw_response)
+
+    return raw_response
+
+
+def safe_json_parse(response_text: str) -> Optional[Dict[str, Any]]:
+    """Parse a JSON string safely, returning None if parsing fails."""
+    try:
+        return json.loads(response_text)
+    except json.JSONDecodeError as error:
+        logger.error("JSON parse error: %s", error)
+        return None
+
+
+def call_with_retry(prompt: str, retries: int = MAX_RETRIES) -> Optional[Dict[str, Any]]:
+    """Call the LLM with retry logic and return parsed JSON if successful."""
     last_error: Optional[Exception] = None
+
     for attempt in range(1, retries + 1):
         try:
-            if api_key or api_url:
-                raw_response = _call_openrouter(prompt, model, api_key or "", api_url or "")
-            else:
-                raw_response = _call_local_ollama(prompt, model, local_url)
+            raw_response = call_llm(prompt)
+            parsed = safe_json_parse(raw_response)
+            if parsed is not None:
+                logger.info("LLM call succeeded on attempt %d", attempt)
+                return parsed
 
-            if response_format == "json":
-                return json.loads(raw_response)
+            raise ValueError("Invalid JSON response")
 
-            parsed_response = _parse_json_response(raw_response, required_keys)
-            return parsed_response
-
-        except (requests.RequestException, json.JSONDecodeError, KeyError, ValueError) as error:
+        except Exception as error:
             last_error = error
-            _log_error(f"LLM attempt {attempt} failed", error)
+            logger.warning("LLM attempt %d failed: %s", attempt, error)
             if attempt < retries:
-                time.sleep(RETRY_DELAY * attempt)
-            continue
+                time.sleep(RETRY_DELAY)
+                continue
 
-    _log_error("All LLM attempts failed; using fallback", last_error)
-    return _development_fallback()
+    logger.error("LLM failed after %d attempts: %s", retries, last_error)
+    return None
+

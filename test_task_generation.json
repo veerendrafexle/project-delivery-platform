@@ -1,0 +1,94 @@
+{
+  "user_stories": [
+    {
+      "title": "As a user, I want to login with email and password",
+      "description": "Users need secure authentication to access their accounts and personalized features. The login process should be simple and secure.",
+      "acceptance_criteria": [
+        "User can enter email and password on login screen",
+        "System validates credentials against user database",
+        "User is redirected to dashboard upon successful login",
+        "Clear error message displayed for invalid credentials",
+        "Password field masks input for security"
+      ]
+    },
+    {
+      "title": "As a sales manager, I want to view opportunity pipeline",
+      "description": "Sales managers need visibility into the sales pipeline to track deal progress and forecast revenue.",
+      "acceptance_criteria": [
+        "Dashboard displays all opportunities by stage",
+        "Opportunities show amount, close date, and probability",
+        "Pipeline view is filterable by date range and owner",
+        "Total pipeline value is calculated and displayed",
+        "Opportunities can be sorted by various criteria"
+      ]
+    }
+  ],
+  "jira_format": [
+    {
+      "fields": {
+        "project": {
+          "key": "PROJ"
+        },
+        "summary": "As a user, I want to login with email and password",
+        "description": "Users need secure authentication to access their accounts and personalized features. The login process should be simple and secure.",
+        "issuetype": {
+          "name": "Story"
+        },
+        "priority": {
+          "name": "Medium"
+        },
+        "labels": [
+          "user-story",
+          "requirements"
+        ],
+        "customfield_acceptance_criteria": "- User can enter email and password on login screen\n- System validates credentials against user database\n- User is redirected to dashboard upon successful login\n- Clear error message displayed for invalid credentials\n- Password field masks input for security"
+      }
+    },
+    {
+      "fields": {
+        "project": {
+          "key": "PROJ"
+        },
+        "summary": "As a sales manager, I want to view opportunity pipeline",
+        "description": "Sales managers need visibility into the sales pipeline to track deal progress and forecast revenue.",
+        "issuetype": {
+          "name": "Story"
+        },
+        "priority": {
+          "name": "Medium"
+        },
+        "labels": [
+          "user-story",
+          "requirements"
+        ],
+        "customfield_acceptance_criteria": "- Dashboard displays all opportunities by stage\n- Opportunities show amount, close date, and probability\n- Pipeline view is filterable by date range and owner\n- Total pipeline value is calculated and displayed\n- Opportunities can be sorted by various criteria"
+      }
+    }
+  ],
+  "azure_devops_format": [
+    {
+      "op": "add",
+      "path": "/fields",
+      "value": {
+        "System.Title": "As a user, I want to login with email and password",
+        "System.Description": "Users need secure authentication to access their accounts and personalized features. The login process should be simple and secure.",
+        "System.WorkItemType": "User Story",
+        "Microsoft.VSTS.Common.Priority": 2,
+        "Microsoft.VSTS.Common.AcceptanceCriteria": "User can enter email and password on login screen\nSystem validates credentials against user database\nUser is redirected to dashboard upon successful login\nClear error message displayed for invalid credentials\nPassword field masks input for security",
+        "System.Tags": "user-story;requirements"
+      }
+    },
+    {
+      "op": "add",
+      "path": "/fields",
+      "value": {
+        "System.Title": "As a sales manager, I want to view opportunity pipeline",
+        "System.Description": "Sales managers need visibility into the sales pipeline to track deal progress and forecast revenue.",
+        "System.WorkItemType": "User Story",
+        "Microsoft.VSTS.Common.Priority": 2,
+        "Microsoft.VSTS.Common.AcceptanceCriteria": "Dashboard displays all opportunities by stage\nOpportunities show amount, close date, and probability\nPipeline view is filterable by date range and owner\nTotal pipeline value is calculated and displayed\nOpportunities can be sorted by various criteria",
+        "System.Tags": "user-story;requirements"
+      }
+    }
+  ]
+}
