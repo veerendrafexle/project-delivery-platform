@@ -1,8 +1,8 @@
 """Convert raw discovery input into structured JSON."""
-import json
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from app.ai_engine import call_llm
+from app.rag import build_rag_prompt
 from config import settings
 
 
@@ -44,7 +44,7 @@ def _sanitize_structure(data: Dict[str, Any]) -> Dict[str, List[str]]:
     return sanitized
 
 
-def extract_structure(raw_text: str) -> Dict[str, List[str]]:
+def extract_structure(raw_text: str, context_chunks: Optional[List[str]] = None) -> Dict[str, List[str]]:
     """Use the AI engine to extract structured JSON from raw text with schema validation."""
     if not raw_text or not raw_text.strip():
         return {
@@ -68,6 +68,9 @@ Input text:
 {raw_text}
 """
 
+    if context_chunks:
+        prompt = build_rag_prompt(prompt, context_chunks)
+
     response = call_llm(
         prompt,
         model=settings.MODEL,
@@ -76,12 +79,9 @@ Input text:
         local_url=settings.LOCAL_LLM_URL,
     )
 
-    try:
-        data = json.loads(response)
-        if _validate_structure(data):
-            return _sanitize_structure(data)
-    except (json.JSONDecodeError, ValueError) as e:
-        print(f"Failed to parse AI response as JSON: {e}")
+    if _validate_structure(response):
+        return _sanitize_structure(response)
+    print("Failed to validate AI response against schema; using fallback structure.")
     
     # Fallback to safe structure
     return {

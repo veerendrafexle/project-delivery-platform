@@ -10,8 +10,8 @@ def _normalize_list(value: Any) -> List[str]:
     return list(value)
 
 
-def generate_brd(data: Dict[str, Any], output_path: str) -> None:
-    """Generate a Business Requirements Document (.txt for demo)."""
+def build_brd_content(data: Dict[str, Any]) -> str:
+    """Build BRD content as plain text."""
     content = "Business Requirements Document\n\n"
 
     content += "Business Objectives:\n"
@@ -26,12 +26,11 @@ def generate_brd(data: Dict[str, Any], output_path: str) -> None:
     for item in _normalize_list(data.get("requirements")):
         content += f"- {item}\n"
 
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(content)
+    return content
 
 
-def generate_urs(data: Dict[str, Any], output_path: str) -> None:
-    """Generate a User Requirements Specification (.txt for demo)."""
+def build_urs_content(data: Dict[str, Any]) -> str:
+    """Build URS content as plain text."""
     content = "User Requirements Specification\n\n"
 
     content += "Current State:\n"
@@ -42,5 +41,18 @@ def generate_urs(data: Dict[str, Any], output_path: str) -> None:
     for item in _normalize_list(data.get("future_state")):
         content += f"- {item}\n"
 
+    return content
+
+
+def generate_brd(data: Dict[str, Any], output_path: str) -> None:
+    """Generate a Business Requirements Document (.txt for demo)."""
+    content = build_brd_content(data)
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+
+def generate_urs(data: Dict[str, Any], output_path: str) -> None:
+    """Generate a User Requirements Specification (.txt for demo)."""
+    content = build_urs_content(data)
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(content)
