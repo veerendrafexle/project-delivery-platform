@@ -1,0 +1,1 @@
+Current process requires too many manual approvals and lacks a centralized source of truth.

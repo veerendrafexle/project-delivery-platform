@@ -1,0 +1,12 @@
+{
+  "project_name": "Project A",
+  "phase": "Discovery",
+  "artifacts": {
+    "BRD": "Pending",
+    "URS": "Not Started"
+  },
+  "approvals": {
+    "BRD": false,
+    "URS": false
+  }
+}
